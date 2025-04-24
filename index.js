@@ -7,6 +7,12 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+// ✅ 添加：允许嵌入到 Shopify 后台 iframe 中
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
+  next();
+});
+
 function getWarrantyInfo(purchaseDateStr) {
   const purchaseDate = new Date(purchaseDateStr);
   const endDate = new Date(purchaseDate);
@@ -73,10 +79,45 @@ app.post('/proxy', async (req, res) => {
     res.status(500).json({ success: false, error: error.response?.data || error.message });
   }
 });
+
+// ✅ 修改主页为嵌入式页面
 app.get('/', (req, res) => {
-  const shop = req.query.shop;
-  res.send(`<h2>✅ Warranty Register App 已成功安装<br>商店：${shop}</h2>`);
+  const { shop = '', host = '' } = req.query;
+
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="zh">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Warranty App</title>
+        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
+        <script>
+          document.addEventListener("DOMContentLoaded", function () {
+            var AppBridge = window['app-bridge'];
+            var createApp = AppBridge.default;
+            var app = createApp({
+              apiKey: '${process.env.SHOPIFY_API_KEY}',
+              host: '${host}',
+              forceRedirect: true
+            });
+          });
+        </script>
+        <style>
+          body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 80px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>✅ Warranty Register App 已加载</h1>
+        <p>店铺：${shop}</p>
+      </body>
+    </html>
+  `);
 });
+
 app.listen(port, () => {
-  console.log(`App is running on port ${port}`);
+  console.log(`✅ App is running on port ${port}`);
 });
