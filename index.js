@@ -73,7 +73,10 @@ app.post('/proxy', async (req, res) => {
     res.status(500).json({ success: false, error: error.response?.data || error.message });
   }
 });
-
+app.get('/', (req, res) => {
+  const shop = req.query.shop;
+  res.send(`<h2>✅ Warranty Register App 已成功安装<br>商店：${shop}</h2>`);
+});
 app.listen(port, () => {
   console.log(`App is running on port ${port}`);
 });
