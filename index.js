@@ -1,21 +1,29 @@
-// ✅ Warranty metafield 写入和更新逻辑
-
 import express from 'express';
 import bodyParser from 'body-parser';
 import axios from 'axios';
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(bodyParser.json());
+// ✅ CORS 设置：允许多个店铺域名
+const allowedOrigins = [
+  'https://frizzlife-solution.myshopify.com',
+  'https://your-other-store.myshopify.com' // 可继续添加
+];
 
-// ✅ 允许嵌入到 Shopify 后台 iframe 中
+app.use(cors());
+
+app.options('*', (req, res) => {
+  res.sendStatus(204);
+});
+
+// ✅ 添加：允许嵌入到 Shopify 后台 iframe 中
 app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
   next();
 });
 
-// ✅ 保修状态计算函数
 function getWarrantyInfo(purchaseDateStr) {
   const purchaseDate = new Date(purchaseDateStr);
   const endDate = new Date(purchaseDate);
@@ -32,7 +40,6 @@ function getWarrantyInfo(purchaseDateStr) {
   };
 }
 
-// ✅ 核心 proxy 接口逻辑
 app.post('/proxy', async (req, res) => {
   const { customerId, newWarranty } = req.body;
 
@@ -84,7 +91,7 @@ app.post('/proxy', async (req, res) => {
   }
 });
 
-// ✅ App 主页（可用于嵌入式展示）
+// ✅ 修改主页为嵌入式页面
 app.get('/', (req, res) => {
   const { shop = '', host = '' } = req.query;
 
