@@ -11,7 +11,7 @@ const allowedOrigins = [
   'https://frizzlife-solution.myshopify.com',
   'https://your-other-store.myshopify.com' // 可继续添加
 ];
-
+app.use(bodyParser.json());
 app.use(cors());
 
 app.options('*', (req, res) => {
