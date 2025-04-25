@@ -1,3 +1,5 @@
+// ✅ Warranty metafield 写入和更新逻辑
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import axios from 'axios';
@@ -7,12 +9,13 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
-// ✅ 添加：允许嵌入到 Shopify 后台 iframe 中
+// ✅ 允许嵌入到 Shopify 后台 iframe 中
 app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
   next();
 });
 
+// ✅ 保修状态计算函数
 function getWarrantyInfo(purchaseDateStr) {
   const purchaseDate = new Date(purchaseDateStr);
   const endDate = new Date(purchaseDate);
@@ -29,6 +32,7 @@ function getWarrantyInfo(purchaseDateStr) {
   };
 }
 
+// ✅ 核心 proxy 接口逻辑
 app.post('/proxy', async (req, res) => {
   const { customerId, newWarranty } = req.body;
 
@@ -45,13 +49,13 @@ app.post('/proxy', async (req, res) => {
       }
     );
 
-    const existingMetafield = oldDataRes.data.metafields.find(m => m.namespace === 'warranty' && m.key === 'products');
+    const existingMetafield = oldDataRes.data.metafields.find(m => m.namespace === 'custom' && m.key === 'shopify_warranty');
     const oldList = existingMetafield ? JSON.parse(existingMetafield.value) : [];
     const updatedList = [...oldList, warrantyWithState];
 
     const metafieldPayload = {
-      namespace: 'warranty',
-      key: 'products',
+      namespace: 'custom',
+      key: 'shopify_warranty',
       type: 'json',
       value: JSON.stringify(updatedList),
       owner_id: customerId,
@@ -80,7 +84,7 @@ app.post('/proxy', async (req, res) => {
   }
 });
 
-// ✅ 修改主页为嵌入式页面
+// ✅ App 主页（可用于嵌入式展示）
 app.get('/', (req, res) => {
   const { shop = '', host = '' } = req.query;
 
