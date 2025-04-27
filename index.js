@@ -68,7 +68,7 @@ app.post('/proxy', async (req, res) => {
       namespace: 'custom',
       key: 'shopify_warranty',
       type: 'json',
-      value: updatedList,
+      value: JSON.stringify(updatedList),
       owner_id: customerId,
       owner_resource: 'customer'
     };
