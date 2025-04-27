@@ -59,13 +59,16 @@ app.post('/proxy', async (req, res) => {
 
     const existingMetafield = oldDataRes.data.metafields.find(m => m.namespace === 'custom' && m.key === 'shopify_warranty');
     const oldList = existingMetafield ? JSON.parse(existingMetafield.value) : [];
-    const updatedList = [...oldList, warrantyWithState];
+    const updatedList = [
+      ...oldList.filter(item => item.order_id !== warrantyWithState.order_id),
+      warrantyWithState
+    ];
 
     const metafieldPayload = {
       namespace: 'custom',
       key: 'shopify_warranty',
       type: 'json',
-      value: JSON.stringify(updatedList),
+      value: updatedList,
       owner_id: customerId,
       owner_resource: 'customer'
     };
