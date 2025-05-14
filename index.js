@@ -56,8 +56,27 @@ app.post('/proxy', async (req, res) => {
 
   try {
     const warrantyInfo = getWarrantyInfo(newWarranty.purchase_date);
-    const warrantyWithState = { ...newWarranty, ...warrantyInfo };
 
+    // 默认使用 newWarranty.product_name
+    let productName = newWarranty.product_name;
+
+    if (newWarranty.remark) {
+      try {
+        const remarkObj = JSON.parse(newWarranty.remark);
+        if (remarkObj.SellerSKU) {
+          productName = remarkObj.SellerSKU; // ✅ 替换 product_name
+        }
+      } catch (e) {
+        console.warn('无法解析 remark 字段，保留原始 product_name');
+      }
+    }
+
+    // 构造最终对象
+    const warrantyWithState = {
+      ...newWarranty,
+      ...warrantyInfo,
+      product_name: productName
+    };
     const oldDataRes = await axios.get(
       `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/customers/${customerId}/metafields.json`,
       {
