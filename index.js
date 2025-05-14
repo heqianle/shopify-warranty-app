@@ -25,18 +25,28 @@ app.use((req, res, next) => {
 });
 
 function getWarrantyInfo(purchaseDateStr) {
-  const purchaseDate = new Date(purchaseDateStr);
+  let purchaseDate;
+
+  // 尝试解析 dd/MM/yyyy 格式
+  const ddMmYyyyRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = purchaseDateStr.match(ddMmYyyyRegex);
+  if (match) {
+    const [, day, month, year] = match;
+    purchaseDate = new Date(`${year}-${month}-${day}`);
+  } else {
+    // 默认使用标准 Date 解析
+    purchaseDate = new Date(purchaseDateStr);
+  }
+
+  if (isNaN(purchaseDate)) {
+    throw new Error('无效的购买日期格式');
+  }
+
   const endDate = new Date(purchaseDate);
   endDate.setMonth(endDate.getMonth() + 18);
 
-  const now = new Date();
-  const timeDiff = endDate - now;
-  const daysRemaining = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-
   return {
-    state: daysRemaining < 0 ? '已过保' : '保修中',
     end_date: endDate.toISOString().split('T')[0],
-    days_remaining: daysRemaining
   };
 }
 
@@ -94,7 +104,58 @@ app.post('/proxy', async (req, res) => {
     res.status(500).json({ success: false, error: error.response?.data || error.message });
   }
 });
+app.post('/delete', async (req, res) => {
+  console.log('🗑️ 删除请求 req.body:', req.body);
+  const { customerId, order_id } = req.body;
 
+  if (!customerId || !order_id) {
+    return res.status(400).json({ success: false, error: 'customerId 和 order_id 是必填字段' });
+  }
+
+  try {
+    const oldDataRes = await axios.get(
+      `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/customers/${customerId}/metafields.json`,
+      {
+        headers: {
+          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN
+        }
+      }
+    );
+
+    const existingMetafield = oldDataRes.data.metafields.find(m => m.namespace === 'custom' && m.key === 'shopify_warranty');
+    if (!existingMetafield) {
+      return res.status(404).json({ success: false, error: '未找到保修信息' });
+    }
+
+    const oldList = JSON.parse(existingMetafield.value);
+    const updatedList = oldList.filter(item => item.order_id !== order_id);
+
+    const metafieldPayload = {
+      namespace: 'custom',
+      key: 'shopify_warranty',
+      type: 'json',
+      value: JSON.stringify(updatedList),
+      owner_id: customerId,
+      owner_resource: 'customer',
+      id: existingMetafield.id
+    };
+
+    const response = await axios.put(
+      `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/metafields/${existingMetafield.id}.json`,
+      { metafield: metafieldPayload },
+      {
+        headers: {
+          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    res.json({ success: true, metafield: response.data.metafield });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+});
 // ✅ 修改主页为嵌入式页面
 app.get('/', (req, res) => {
   const { shop = '', host = '' } = req.query;
