@@ -23,7 +23,26 @@ app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
   next();
 });
-
+// 判断域名，根据域名确定使用那个变量
+function getShopifyStoreConfig(origin = '') {
+  if (origin.includes('frizzlife.co.uk')) {
+    return {
+      domain: process.env.SHOPIFY_UK_STORE_DOMAIN,
+      token: process.env.SHOPIFY_UK_ACCESS_TOKEN
+    };
+  } else if (origin.includes('frizzlife.de') || origin.includes('frizzlife.eu')) {
+    return {
+      domain: process.env.SHOPIFY_DE_STORE_DOMAIN,
+      token: process.env.SHOPIFY_DE_ACCESS_TOKEN
+    };
+  } else {
+    return {
+      domain: process.env.SHOPIFY_STORE_DOMAIN,
+      token: process.env.SHOPIFY_ACCESS_TOKEN
+    };
+  }
+}
+// 购买时间
 function getWarrantyInfo(purchaseDateStr) {
   let purchaseDate;
 
@@ -51,9 +70,6 @@ function getWarrantyInfo(purchaseDateStr) {
 }
 
 app.post('/proxy', async (req, res) => {
-  console.log('🔍 接收到的 req.body:', req.body);
-  console.log('🗑️ 删除请求 req.body:', req.headers);
-  console.log('🗑️ 删除请求 req.body:', req.headers.origin)
   const { customerId, newWarranty } = req.body;
 
   try {
@@ -79,11 +95,14 @@ app.post('/proxy', async (req, res) => {
       ...warrantyInfo,
       product_name: productName
     };
+    const origin = req.get('origin') || '';
+    const { domain, token } = getShopifyStoreConfig(origin);
+
     const oldDataRes = await axios.get(
-      `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/customers/${customerId}/metafields.json`,
+      `https://${domain}/admin/api/2023-10/customers/${customerId}/metafields.json`,
       {
         headers: {
-          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN
+          "X-Shopify-Access-Token": token
         }
       }
     );
@@ -126,7 +145,6 @@ app.post('/proxy', async (req, res) => {
   }
 });
 app.post('/delete', async (req, res) => {
-  console.log('🗑️ 删除请求 req.body:', req.body);
   const { customerId, order_id } = req.body;
 
   if (!customerId || !order_id) {
@@ -134,11 +152,14 @@ app.post('/delete', async (req, res) => {
   }
 
   try {
+    const origin = req.get('origin') || '';
+    const { domain, token } = getShopifyStoreConfig(origin);
+
     const oldDataRes = await axios.get(
-      `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/customers/${customerId}/metafields.json`,
+      `https://${domain}/admin/api/2023-10/customers/${customerId}/metafields.json`,
       {
         headers: {
-          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN
+          "X-Shopify-Access-Token": token
         }
       }
     );
