@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
-
+console.log('Node.js 运行版本:', process.version);
 const app = express();
 const port = process.env.PORT || 3000;
 
