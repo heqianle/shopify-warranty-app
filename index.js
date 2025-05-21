@@ -52,6 +52,8 @@ function getWarrantyInfo(purchaseDateStr) {
 
 app.post('/proxy', async (req, res) => {
   console.log('🔍 接收到的 req.body:', req.body);
+  console.log('🗑️ 删除请求 req.body:', req.headers);
+  console.log('🗑️ 删除请求 req.body:', req.headers.origin)
   const { customerId, newWarranty } = req.body;
 
   try {
