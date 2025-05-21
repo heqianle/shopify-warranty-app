@@ -2,7 +2,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
-console.log('Node.js 运行版本:', process.version);
+import dotenv from 'dotenv';
+dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -202,38 +204,7 @@ app.post('/delete', async (req, res) => {
 app.get('/', (req, res) => {
   const { shop = '', host = '' } = req.query;
 
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="zh">
-      <head>
-        <meta charset="UTF-8" />
-        <title>Warranty App</title>
-        <script src="https://unpkg.com/@shopify/app-bridge@3"></script>
-        <script>
-          document.addEventListener("DOMContentLoaded", function () {
-            var AppBridge = window['app-bridge'];
-            var createApp = AppBridge.default;
-            var app = createApp({
-              apiKey: '${process.env.SHOPIFY_API_KEY}',
-              host: '${host}',
-              forceRedirect: true
-            });
-          });
-        </script>
-        <style>
-          body {
-            font-family: sans-serif;
-            text-align: center;
-            padding: 80px;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>✅ Warranty Register App 已加载</h1>
-        <p>店铺：${shop}</p>
-      </body>
-    </html>
-  `);
+  res.send('✅ Warranty App 服务已启动。');
 });
 
 app.listen(port, () => {
