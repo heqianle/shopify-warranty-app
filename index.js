@@ -2,8 +2,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -27,6 +25,7 @@ app.use((req, res, next) => {
 });
 // 判断域名，根据域名确定使用那个变量
 function getShopifyStoreConfig(origin = '') {
+  console.log(origin,'origin')
   if (origin.includes('frizzlife.co.uk')) {
     return {
       domain: process.env.SHOPIFY_UK_STORE_DOMAIN,
@@ -43,6 +42,7 @@ function getShopifyStoreConfig(origin = '') {
       token: process.env.SHOPIFY_ACCESS_TOKEN
     };
   }
+  console.log(domain,'--------------',token)
 }
 // 购买时间
 function getWarrantyInfo(purchaseDateStr) {
