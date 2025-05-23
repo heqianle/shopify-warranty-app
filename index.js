@@ -137,7 +137,7 @@ app.post('/proxy', async (req, res) => {
       method: existingMetafield ? 'put' : 'post',
       url: metafieldEndpoint,
       headers: {
-        "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+        "X-Shopify-Access-Token": token,
         "Content-Type": "application/json"
       },
       data: existingMetafield
@@ -189,7 +189,7 @@ app.post('/delete', async (req, res) => {
     };
 
     const response = await axios.put(
-      `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/metafields/${existingMetafield.id}.json`,
+      `https://${domain}/admin/api/2023-10/metafields/${existingMetafield.id}.json`,
       { metafield: metafieldPayload },
       {
         headers: {
