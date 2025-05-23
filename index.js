@@ -131,8 +131,8 @@ app.post('/proxy', async (req, res) => {
     };
 
     const metafieldEndpoint = existingMetafield
-      ? `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/metafields/${existingMetafield.id}.json`
-      : `https://${process.env.SHOPIFY_STORE_DOMAIN}/admin/api/2023-10/metafields.json`;
+      ? `https://${domain}/admin/api/2023-10/metafields/${existingMetafield.id}.json`
+      : `https://${domain}/admin/api/2023-10/metafields.json`;
 
     const response = await axios({
       method: existingMetafield ? 'put' : 'post',
