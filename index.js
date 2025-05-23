@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
 
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -27,22 +28,26 @@ app.use((req, res, next) => {
 function getShopifyStoreConfig(origin = '') {
   console.log(origin,'origin')
   if (origin.includes('frizzlife.co.uk')) {
+    console.log(1111,process.env.SHOPIFY_UK_STORE_DOMAIN)
     return {
       domain: process.env.SHOPIFY_UK_STORE_DOMAIN,
       token: process.env.SHOPIFY_UK_ACCESS_TOKEN
     };
+    
   } else if (origin.includes('frizzlife.de') || origin.includes('frizzlife.eu')) {
+    console.log(2222,process.env.SHOPIFY_DE_STORE_DOMAIN)
     return {
       domain: process.env.SHOPIFY_DE_STORE_DOMAIN,
       token: process.env.SHOPIFY_DE_ACCESS_TOKEN
     };
   } else {
+    console.log(333,process.env.SHOPIFY_STORE_DOMAIN)
     return {
       domain: process.env.SHOPIFY_STORE_DOMAIN,
       token: process.env.SHOPIFY_ACCESS_TOKEN
     };
   }
-  console.log(domain,'--------------',token)
+  
 }
 // 购买时间
 function getWarrantyInfo(purchaseDateStr) {
