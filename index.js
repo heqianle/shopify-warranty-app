@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
 
-
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -194,7 +193,7 @@ app.post('/delete', async (req, res) => {
       { metafield: metafieldPayload },
       {
         headers: {
-          "X-Shopify-Access-Token": process.env.SHOPIFY_ACCESS_TOKEN,
+          "X-Shopify-Access-Token": token,
           "Content-Type": "application/json"
         }
       }
