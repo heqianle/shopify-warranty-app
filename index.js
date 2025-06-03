@@ -169,8 +169,9 @@ app.post('/send-email', async (req, res) => {
     });
 
     const mailOptions = {
-      from: `"${name}" <${email}>`,
-      to: process.env.MAIL_USER, // 发送到你的邮箱
+      from: `"网站联系表单" <zjoey087@gmail.com>`,
+      to: "customer@frizzlife.com", // 发送到你的邮箱
+      replyTo: email,
       subject: 'New Contact Form Message',
       text: message,
       html: `<p><strong>Name:</strong> ${name}</p>
