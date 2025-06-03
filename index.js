@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
+import nodemailer from 'nodemailer';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
   next();
 });
+
 // 判断域名，根据域名确定使用那个变量
 function getShopifyStoreConfig(origin = '') {
   console.log(origin,'origin')
@@ -148,6 +150,40 @@ app.post('/proxy', async (req, res) => {
     res.json({ success: true, metafield: response.data.metafield });
   } catch (error) {
     res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+});
+app.post('/send-email', async (req, res) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ success: false, error: 'Missing required fields.' });
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      }
+    });
+
+    const mailOptions = {
+      from: `"${name}" <${email}>`,
+      to: process.env.MAIL_USER, // 发送到你的邮箱
+      subject: 'New Contact Form Message',
+      text: message,
+      html: `<p><strong>Name:</strong> ${name}</p>
+             <p><strong>Email:</strong> ${email}</p>
+             <p><strong>Message:</strong></p>
+             <p>${message}</p>`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, message: 'Email sent successfully.' });
+  } catch (err) {
+    console.error('Mail send error:', err);
+    res.status(500).json({ success: false, error: 'Failed to send email.' });
   }
 });
 app.post('/delete', async (req, res) => {
