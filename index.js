@@ -80,7 +80,8 @@ function getWarrantyInfo(purchaseDateStr) {
   };
 }
 app.post('/send-invite', async (req, res) => {
-  const { customerId, } = req.body;
+  const { customerId } = req.body;
+  onsole.warn('customerId', customerId);
   if (!customerId || !/^\d+$/.test(customerId)) {
     console.warn('Invalid or missing customerId:', customerId);
     return res.status(200).json({ success: false, error: 'Invalid customerId' }); // ✅ 返回 200，避免 Flow 重试
