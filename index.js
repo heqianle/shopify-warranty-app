@@ -3,6 +3,8 @@ import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
+// import dotenv from 'dotenv';
+// dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -50,6 +52,7 @@ function getShopifyStoreConfig(origin = '') {
   }
   
 }
+
 // 购买时间
 function getWarrantyInfo(purchaseDateStr) {
   let purchaseDate;
@@ -76,7 +79,36 @@ function getWarrantyInfo(purchaseDateStr) {
     end_date: endDate.toISOString().split('T')[0],
   };
 }
+app.post('/send-invite', async (req, res) => {
+  const { customerId } = req.body;
+  if (!customerId) {
+    return res.status(400).json({ success: false, error: 'Missing customerId' });
+  }
 
+  try {
+    const origin = req.get('origin') || '';
+    const { domain, token } = getShopifyStoreConfig(origin);
+
+    const response = await axios.post(
+      `https://${domain}/admin/api/${process.env.SHOPIFY_API_VERSION}/customers/${customerId}/send_invite.json`,
+      {
+        customer_invite: {
+        }
+      },
+      {
+        headers: {
+          "X-Shopify-Access-Token": token,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    res.json({ success: true, result: response.data });
+  } catch (error) {
+    console.error('Send invite error:', error.response?.data || error.message);
+    res.status(500).json({ success: false, error: error.response?.data || error.message });
+  }
+});
 app.post('/proxy', async (req, res) => {
   const { customerId, newWarranty } = req.body;
 
