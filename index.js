@@ -93,15 +93,30 @@ app.post('/send-invite', async (req, res) => {
     const { domain, token } = getShopifyStoreConfig(shop);
     console.log(domain, token,"11223111")
     const response = await axios.post(
-      `https://${domain}/admin/api/${process.env.SHOPIFY_API_VERSION}/customers/${customerId}/send_invite.json`,
+      `https://${domain}/admin/api/2023-10/graphql.json`,
       {
-        customer_invite: {
+        query: `
+          mutation customerSendAccountInviteEmail($customerId: ID!) {
+            customerSendAccountInviteEmail(customerId: $customerId) {
+              customer {
+                id
+              }
+              userErrors {
+                field
+                message
+              }
+            }
+          }
+        `,
+        variables: {
+          customerId: `gid://shopify/Customer/${customerId}`
         }
       },
       {
         headers: {
           "X-Shopify-Access-Token": token,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Accept": "application/json"
         }
       }
     );
