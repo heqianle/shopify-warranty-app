@@ -80,8 +80,8 @@ function getWarrantyInfo(purchaseDateStr) {
   };
 }
 app.post('/send-invite', async (req, res) => {
-  const { customerId } = req.body;
-  onsole.warn('customerId', customerId);
+  const { customerId,shop } = req.body;
+  console.warn('customerId', customerId);
   if (!customerId || !/^\d+$/.test(customerId)) {
     console.warn('Invalid or missing customerId:', customerId);
     return res.status(200).json({ success: false, error: 'Invalid customerId' }); // ✅ 返回 200，避免 Flow 重试
@@ -90,7 +90,7 @@ app.post('/send-invite', async (req, res) => {
   try {
 
     const origin = req.get('origin') || '';
-    const { domain, token } = getShopifyStoreConfig(origin);
+    const { domain, token } = getShopifyStoreConfig(shop);
     console.log(domain, token,"11223111")
     const response = await axios.post(
       `https://${domain}/admin/api/${process.env.SHOPIFY_API_VERSION}/customers/${customerId}/send_invite.json`,
