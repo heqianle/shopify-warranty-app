@@ -93,7 +93,7 @@ app.post('/send-invite', async (req, res) => {
     const { domain, token } = getShopifyStoreConfig(shop);
     console.log(domain, token,"11223111")
     const response = await axios.post(
-      `https://${domain}/admin/api/2023-10/graphql.json`,
+      `https://${domain}/admin/api/2024-10/graphql.json`,
       {
         query: `
           mutation customerSendAccountInviteEmail($customerId: ID!) {
