@@ -276,10 +276,9 @@ app.post('/delete', async (req, res) => {
   }
 });
 // ✅ 修改主页为嵌入式页面
-app.get('/', (req, res) => {
-  const { shop = '', host = '' } = req.query;
-
-  res.send('✅ Warranty App 服务已启动。');
+app.post('/', (req, res) => {
+  console.warn('Flow 请求路径错误，但我们友好返回 200，防止重试');
+  res.status(200).json({ success: false, message: 'Missing path, but handled gracefully.' });
 });
 
 app.listen(port, () => {
