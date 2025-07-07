@@ -80,15 +80,16 @@ function getWarrantyInfo(purchaseDateStr) {
   };
 }
 app.post('/send-invite', async (req, res) => {
-  const { customerId } = req.body;
+  const { customerId, } = req.body;
   if (!customerId) {
     return res.status(400).json({ success: false, error: 'Missing customerId' });
   }
 
   try {
+
     const origin = req.get('origin') || '';
     const { domain, token } = getShopifyStoreConfig(origin);
-
+    console.log(domain, token,"11223111")
     const response = await axios.post(
       `https://${domain}/admin/api/${process.env.SHOPIFY_API_VERSION}/customers/${customerId}/send_invite.json`,
       {
@@ -102,7 +103,7 @@ app.post('/send-invite', async (req, res) => {
         }
       }
     );
-
+    console.log(response.data,"response.data")
     res.json({ success: true, result: response.data });
   } catch (error) {
     console.error('Send invite error:', error.response?.data || error.message);
