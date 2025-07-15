@@ -23,28 +23,44 @@ app.options('*', (req, res) => {
 
 // ✅ 添加：允许嵌入到 Shopify 后台 iframe 中
 app.use((req, res, next) => {
-  res.setHeader('Content-Security-Policy', "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
+  const origin = req.get('origin') || '';
+  const trustedDomains = [
+    'frizzlife.co.uk',
+    'frizzlife.de',
+    'frizzlife.eu',
+    'frizzlife-solution.myshopify.com',
+    'zmypha-hz.myshopify.com',
+    'tdh1na-a4.myshopify.com'
+  ];
+
+  const isOriginTrusted = trustedDomains.some(domain => origin.includes(domain));
+
+  if (!isOriginTrusted) {
+    const incomingSecret = req.body?.secret;
+    if (incomingSecret !== process.env.SHARED_SECRET) {
+      console.warn('❌ 请求被拒绝：origin 不可信，secret 无效');
+      return res.status(403).json({ success: false, error: 'Unauthorized request' });
+    } else {
+      console.log('⚠️ 使用 secret 验证通过，origin 缺失或不可信');
+    }
+  }
   next();
 });
 
 // 判断域名，根据域名确定使用那个变量
 function getShopifyStoreConfig(origin = '') {
-  console.log(origin,'origin')
   if (origin.includes('frizzlife.co.uk')) {
-    console.log(1111,process.env.SHOPIFY_UK_STORE_DOMAIN)
     return {
       domain: process.env.SHOPIFY_UK_STORE_DOMAIN,
       token: process.env.SHOPIFY_UK_ACCESS_TOKEN
     };
     
   } else if (origin.includes('frizzlife.de') || origin.includes('frizzlife.eu')) {
-    console.log(2222,process.env.SHOPIFY_DE_STORE_DOMAIN)
     return {
       domain: process.env.SHOPIFY_DE_STORE_DOMAIN,
       token: process.env.SHOPIFY_DE_ACCESS_TOKEN
     };
   } else {
-    console.log(333,process.env.SHOPIFY_STORE_DOMAIN)
     return {
       domain: process.env.SHOPIFY_STORE_DOMAIN,
       token: process.env.SHOPIFY_ACCESS_TOKEN
@@ -81,15 +97,11 @@ function getWarrantyInfo(purchaseDateStr) {
 }
 app.post('/send-invite', async (req, res) => {
   const { customerId,shop } = req.body;
-  console.warn('customerId', customerId);
   if (!customerId || !/^\d+$/.test(customerId)) {
-    console.warn('Invalid or missing customerId:', customerId);
     return res.status(200).json({ success: false, error: 'Invalid customerId' }); // ✅ 返回 200，避免 Flow 重试
   }
 
   try {
-
-    const origin = req.get('origin') || '';
     const { domain, token } = getShopifyStoreConfig(shop);
     console.log(domain, token,"11223111")
     const response = await axios.post(
@@ -113,14 +125,13 @@ app.post('/send-invite', async (req, res) => {
         }
       },
       {
-        headers: {
+        headers: {  
           "X-Shopify-Access-Token": token,
           "Content-Type": "application/json",
           "Accept": "application/json"
         }
       }
     );
-    console.log(response.data,"response.data")
     res.json({ success: true, result: response.data });
   } catch (error) {
     console.error('Send invite error:', error.response?.data || error.message);
