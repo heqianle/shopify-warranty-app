@@ -3,8 +3,8 @@ import bodyParser from 'body-parser';
 import axios from 'axios';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
-// import dotenv from 'dotenv';
-// dotenv.config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -23,10 +23,13 @@ app.options('*', (req, res) => {
 
 // ✅ 添加：允许嵌入到 Shopify 后台 iframe 中
 app.use((req, res, next) => {
+  const skipPaths = ['/', '/health'];
+  if (skipPaths.includes(req.path)) return next();
   const origin = req.get('origin') || '';
   const trustedDomains = [
     'frizzlife.co.uk',
     'frizzlife.de',
+    'frizzlife.com',
     'frizzlife.eu',
     'frizzlife-solution.myshopify.com',
     'zmypha-hz.myshopify.com',
@@ -41,7 +44,7 @@ app.use((req, res, next) => {
       console.warn('❌ 请求被拒绝：origin 不可信，secret 无效');
       return res.status(403).json({ success: false, error: 'Unauthorized request' });
     } else {
-      console.log('⚠️ 使用 secret 验证通过，origin 缺失或不可信');
+      console.log('⚠️ 使用 secret 验证通过');
     }
   }
   next();
@@ -103,7 +106,6 @@ app.post('/send-invite', async (req, res) => {
 
   try {
     const { domain, token } = getShopifyStoreConfig(shop);
-    console.log(domain, token,"11223111")
     const response = await axios.post(
       `https://${domain}/admin/api/2024-10/graphql.json`,
       {
@@ -132,9 +134,11 @@ app.post('/send-invite', async (req, res) => {
         }
       }
     );
+    console.log('发送成功', customerId);
     res.json({ success: true, result: response.data });
   } catch (error) {
     console.error('Send invite error:', error.response?.data || error.message);
+    console.log('发送失败', customerId);
     res.status(500).json({ success: false, error: error.response?.data || error.message });
   }
 });
